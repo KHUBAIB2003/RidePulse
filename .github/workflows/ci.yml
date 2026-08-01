@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  backend-test:
-    name: Node.js Backend Lint & Test
+  backend-ci:
+    name: Backend CI (TypeCheck, Test & Build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,32 +18,23 @@ jobs:
           node-version: 20.x
           cache: 'npm'
           cache-dependency-path: ridepulse_backend/package-lock.json
+
       - name: Install Backend Dependencies
         run: |
           cd ridepulse_backend
           npm ci || npm install
-      - name: Build TypeScript
+
+      - name: Type Check (TSC)
         run: |
           cd ridepulse_backend
-          npm run build --if-present
+          npx tsc --noEmit
 
-  flutter-test:
-    name: Flutter Mobile Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Java JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - name: Set up Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - name: Install Flutter Dependencies
+      - name: Run Jest Unit & Integration Tests
         run: |
-          if [ -d "ridepulse_mobile" ]; then
-            cd ridepulse_mobile
-            flutter pub get
-          fi
+          cd ridepulse_backend
+          npm test
+
+      - name: Build TypeScript Output
+        run: |
+          cd ridepulse_backend
+          npm run build
