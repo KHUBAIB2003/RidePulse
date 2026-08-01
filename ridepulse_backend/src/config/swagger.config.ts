@@ -6,7 +6,7 @@ const swaggerSpec = {
   info: {
     title: 'RidePulse v2.0 REST API Specification',
     version: '2.0.0',
-    description: 'Enterprise Digital Garage, Telemetry & Identity API Engine for RidePulse Motorcycle Platform.',
+    description: 'Enterprise Telemetry, Ride Tracking, SOS, Digital Garage & Identity API Engine for RidePulse Platform.',
     contact: {
       name: 'RidePulse Engineering Team',
       email: 'support@ridepulse.local'
@@ -82,46 +82,86 @@ const swaggerSpec = {
         responses: { 200: { description: 'Bike soft-deleted' } }
       }
     },
-    '/bikes/{id}/default': {
-      patch: {
-        summary: 'Set Motorcycle as Default',
-        responses: { 200: { description: 'Default bike set' } }
-      }
-    },
-    '/bikes/{id}/archive': {
-      patch: {
-        summary: 'Archive/Restore Motorcycle',
-        responses: { 200: { description: 'Archive status toggled' } }
-      }
-    },
-    '/bikes/{id}/maintenance': {
+    '/rides/start': {
       post: {
-        summary: 'Log Maintenance Service',
-        responses: { 201: { description: 'Maintenance logged' } }
-      },
-      get: {
-        summary: 'Get Maintenance History',
-        responses: { 200: { description: 'Maintenance history' } }
+        summary: 'Start Ride Recording Session',
+        responses: { 201: { description: 'Ride session started' } }
       }
     },
-    '/bikes/{id}/expenses': {
+    '/rides/pause': {
       post: {
-        summary: 'Log Vehicle Expense',
-        responses: { 201: { description: 'Expense logged' } }
-      },
-      get: {
-        summary: 'Get Vehicle Expenses',
-        responses: { 200: { description: 'Expenses list' } }
+        summary: 'Pause Ride Recording Session',
+        responses: { 200: { description: 'Ride session paused' } }
       }
     },
-    '/bikes/{id}/fuel': {
+    '/rides/resume': {
       post: {
-        summary: 'Log Fuel Fill & Calculate Economy',
-        responses: { 201: { description: 'Fuel log saved & Kmpl calculated' } }
-      },
+        summary: 'Resume Ride Recording Session',
+        responses: { 200: { description: 'Ride session resumed' } }
+      }
+    },
+    '/rides/stop': {
+      post: {
+        summary: 'Stop & Finalize Ride Session',
+        responses: { 200: { description: 'Ride session completed' } }
+      }
+    },
+    '/rides/location': {
+      post: {
+        summary: 'Append Single GPS Location Waypoint',
+        responses: { 200: { description: 'Location appended' } }
+      }
+    },
+    '/rides/telemetry': {
+      post: {
+        summary: 'Batch Append GPS Telemetry Points',
+        responses: { 200: { description: 'Telemetry points processed' } }
+      }
+    },
+    '/rides': {
       get: {
-        summary: 'Get Fuel Log History',
-        responses: { 200: { description: 'Fuel logs list' } }
+        summary: 'Search & Filter Recorded Rides',
+        responses: { 200: { description: 'Rides list retrieved' } }
+      }
+    },
+    '/rides/statistics/summary': {
+      get: {
+        summary: 'Get Rider Aggregate Statistics',
+        responses: { 200: { description: 'Aggregate stats' } }
+      }
+    },
+    '/rides/{id}': {
+      get: {
+        summary: 'Get Ride Details & Waypoints',
+        responses: { 200: { description: 'Ride details' } }
+      },
+      delete: {
+        summary: 'Soft-Delete Ride',
+        responses: { 200: { description: 'Ride deleted' } }
+      }
+    },
+    '/rides/{id}/replay': {
+      get: {
+        summary: 'Get Ride Telemetry Replay Keyframes',
+        responses: { 200: { description: 'Replay dataset' } }
+      }
+    },
+    '/rides/{id}/export/gpx': {
+      get: {
+        summary: 'Export Track to Open Standard GPX XML',
+        responses: { 200: { description: 'GPX XML file' } }
+      }
+    },
+    '/rides/{id}/export/geojson': {
+      get: {
+        summary: 'Export Track to Standard GeoJSON',
+        responses: { 200: { description: 'GeoJSON file' } }
+      }
+    },
+    '/rides/{id}/export/csv': {
+      get: {
+        summary: 'Export Track to CSV Telemetry Data',
+        responses: { 200: { description: 'CSV file' } }
       }
     }
   }
@@ -129,7 +169,7 @@ const swaggerSpec = {
 
 export const setupSwaggerDocs = (app: Express): void => {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  app.get('/api/docs.json', (req: Request, res: Response) => {
+  app.get('/api/docs.json', (_req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
