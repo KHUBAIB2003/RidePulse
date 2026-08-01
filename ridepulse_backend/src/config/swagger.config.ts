@@ -6,7 +6,7 @@ const swaggerSpec = {
   info: {
     title: 'RidePulse v2.0 REST API Specification',
     version: '2.0.0',
-    description: 'Enterprise Identity & Telemetry API Engine for RidePulse Motorcycle Companion Platform.',
+    description: 'Enterprise Digital Garage, Telemetry & Identity API Engine for RidePulse Motorcycle Platform.',
     contact: {
       name: 'RidePulse Engineering Team',
       email: 'support@ridepulse.local'
@@ -43,94 +43,85 @@ const swaggerSpec = {
     '/auth/register': {
       post: {
         summary: 'User Registration',
-        description: 'Registers a new rider account with default preferences and verification token.',
         responses: { 201: { description: 'Account registered' } }
       }
     },
     '/auth/login': {
       post: {
         summary: 'User Login & Authentication',
-        description: 'Authenticates rider credentials with failed login protection (locks after 5 failures).',
         responses: { 200: { description: 'Authenticated successfully' } }
       }
     },
-    '/auth/refresh': {
-      post: {
-        summary: 'Rotate Refresh & Access Tokens',
-        description: 'Exchanges refresh token for new access token with automatic reuse detection.',
-        responses: { 200: { description: 'Tokens rotated' } }
-      }
-    },
-    '/auth/logout': {
-      post: {
-        summary: 'User Logout',
-        responses: { 200: { description: 'Logged out successfully' } }
-      }
-    },
-    '/auth/change-password': {
-      post: {
-        summary: 'Change Current Password',
-        responses: { 200: { description: 'Password changed successfully' } }
-      }
-    },
-    '/auth/forgot-password': {
-      post: {
-        summary: 'Forgot Password Request',
-        responses: { 200: { description: 'Reset link dispatched' } }
-      }
-    },
-    '/auth/reset-password': {
-      post: {
-        summary: 'Reset Password',
-        responses: { 200: { description: 'Password reset' } }
-      }
-    },
-    '/auth/verify-email': {
-      post: {
-        summary: 'Verify Email Address',
-        responses: { 200: { description: 'Email verified' } }
-      }
-    },
-    '/profile': {
+    '/bikes': {
       get: {
-        summary: 'Get Authenticated User Profile',
-        responses: { 200: { description: 'Profile payload' } }
+        summary: 'Get Rider Motorcycles',
+        responses: { 200: { description: 'Bikes list retrieved' } }
+      },
+      post: {
+        summary: 'Add Motorcycle to Digital Garage',
+        responses: { 201: { description: 'Bike created' } }
+      }
+    },
+    '/bikes/statistics': {
+      get: {
+        summary: 'Get Garage Statistics',
+        responses: { 200: { description: 'Garage stats' } }
+      }
+    },
+    '/bikes/{id}': {
+      get: {
+        summary: 'Get Motorcycle Details',
+        responses: { 200: { description: 'Bike details' } }
       },
       put: {
-        summary: 'Update User Profile',
-        responses: { 200: { description: 'Profile updated' } }
+        summary: 'Update Motorcycle Details',
+        responses: { 200: { description: 'Bike updated' } }
       },
       delete: {
-        summary: 'Soft-Delete Account',
-        responses: { 200: { description: 'Account soft-deleted' } }
+        summary: 'Remove Motorcycle',
+        responses: { 200: { description: 'Bike soft-deleted' } }
       }
     },
-    '/profile/preferences': {
-      put: {
-        summary: 'Update Preferences & Settings',
-        responses: { 200: { description: 'Preferences updated' } }
+    '/bikes/{id}/default': {
+      patch: {
+        summary: 'Set Motorcycle as Default',
+        responses: { 200: { description: 'Default bike set' } }
       }
     },
-    '/profile/sessions': {
-      get: {
-        summary: 'Get Active User Sessions',
-        responses: { 200: { description: 'Active sessions list' } }
-      },
-      delete: {
-        summary: 'Terminate Other Sessions',
-        responses: { 200: { description: 'Sessions terminated' } }
+    '/bikes/{id}/archive': {
+      patch: {
+        summary: 'Archive/Restore Motorcycle',
+        responses: { 200: { description: 'Archive status toggled' } }
       }
     },
-    '/profile/activity': {
-      get: {
-        summary: 'Get Activity Audit History Logs',
-        responses: { 200: { description: 'Audit history list' } }
-      }
-    },
-    '/profile/emergency-contacts': {
+    '/bikes/{id}/maintenance': {
       post: {
-        summary: 'Add Emergency Contact',
-        responses: { 201: { description: 'Contact added' } }
+        summary: 'Log Maintenance Service',
+        responses: { 201: { description: 'Maintenance logged' } }
+      },
+      get: {
+        summary: 'Get Maintenance History',
+        responses: { 200: { description: 'Maintenance history' } }
+      }
+    },
+    '/bikes/{id}/expenses': {
+      post: {
+        summary: 'Log Vehicle Expense',
+        responses: { 201: { description: 'Expense logged' } }
+      },
+      get: {
+        summary: 'Get Vehicle Expenses',
+        responses: { 200: { description: 'Expenses list' } }
+      }
+    },
+    '/bikes/{id}/fuel': {
+      post: {
+        summary: 'Log Fuel Fill & Calculate Economy',
+        responses: { 201: { description: 'Fuel log saved & Kmpl calculated' } }
+      },
+      get: {
+        summary: 'Get Fuel Log History',
+        responses: { 200: { description: 'Fuel logs list' } }
       }
     }
   }
