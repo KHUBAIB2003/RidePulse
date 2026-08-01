@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RidePulse | Multi-Feature Bike Tracking, SOS & Off-Grid Mesh Network</title>
+  <meta name="description" content="State-of-the-art bike experience tracking app with Digital Garage, SOS emergency system, voice-command intercom, off-grid mesh network, Guardian Check-In, and Community Hazard Reporting.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- Top Header Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-motorcycle"></i></div>
+        <span>RIDE<span style="color:var(--primary);">PULSE</span></span>
+      </div>
+
+      <div class="status-pills">
+        <div id="signal-status-pill" class="pill active-signal">
+          <span class="dot-indicator"></span> 5G Cellular Connected
+        </div>
+        <div id="btn-open-guardian-modal" class="pill active-signal" style="cursor:pointer;" title="Guardian Check-In Settings">
+          <i class="fa-solid fa-user-shield" style="color:var(--primary);"></i> Guardian: <span id="topbar-guardian-status">30m</span>
+        </div>
+        <div id="vox-status-pill" class="pill vox-active">
+          <span class="dot-indicator"></span> Intercom Active (VOX)
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div id="active-bike-summary-badge" class="user-profile-badge" onclick="window.app.switchView('garage-view')">
+          <i class="fa-solid fa-motorcycle" style="color:var(--primary);"></i>
+          <span>Panigale V4 S</span>
+        </div>
+        <div class="user-profile-badge">
+          <div class="avatar">AM</div>
+          <span style="font-weight:600; font-size:0.85rem;">Alex</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Toast Notification Overlay Container -->
+    <div id="toast-container" style="position:fixed; top:80px; right:24px; z-index:999; max-width:360px;"></div>
+
+    <!-- Main Dynamic View Area -->
+    <main class="main-content">
+
+      <!-- VIEW 1: DIGITAL GARAGE -->
+      <section id="garage-view" class="view-section active">
+        <div class="glass-panel">
+          <div class="section-header">
+            <div>
+              <h1 class="section-title"><i class="fa-solid fa-warehouse"></i> Digital Garage</h1>
+              <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Manage bikes, odometer mileage, and real-time maintenance service reminders.</p>
+            </div>
+            <button id="btn-add-bike-modal" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i> Add New Bike
+            </button>
+          </div>
+
+          <!-- Bike Cards Container -->
+          <div id="garage-bikes-container" class="garage-grid">
+            <!-- Dynamically populated by garage.js -->
+          </div>
+        </div>
+
+        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(0,242,254,0.08) 0%, rgba(16,24,39,0.7) 100%); border-color: rgba(0,242,254,0.25);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div>
+              <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:4px;"><i class="fa-solid fa-clipboard-check" style="color:var(--primary);"></i> Pre-Ride Garage Health Check</h3>
+              <p style="color:var(--text-muted); font-size:0.88rem;">Verify overdue service alerts before forming a group or hitting the road.</p>
+            </div>
+            <button id="btn-pre-ride-check" class="btn btn-primary">
+              Run Health Check & Continue to Ride Hub <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Service Expenses & Logbook -->
+        <div class="glass-panel" style="margin-top:20px;">
+          <div class="section-header">
+            <div>
+              <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:4px;"><i class="fa-solid fa-receipt" style="color:var(--primary);"></i> Maintenance Expense Logbook</h3>
+              <p style="color:var(--text-muted); font-size:0.85rem;">Track parts, oil changes, tire expenses, and overall cost per kilometer.</p>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="background:rgba(0,0,0,0.3); padding:6px 14px; border-radius:20px; border:1px solid var(--glass-border); text-align:right;">
+                <span style="font-size:0.75rem; color:var(--text-muted);">TOTAL SPENT: </span>
+                <span id="garage-total-service-cost" style="font-weight:700; color:var(--success);">$0</span>
+                <span id="garage-cost-per-km" style="font-size:0.75rem; color:var(--primary); margin-left:6px;">($0/km)</span>
+              </div>
+              <button id="btn-open-service-modal" class="btn btn-secondary" style="font-size:0.85rem; padding:8px 14px;">
+                <i class="fa-solid fa-plus"></i> Add Service Log
+              </button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; text-align:left;">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.8rem;">
+                  <th style="padding:10px;">DATE</th>
+                  <th style="padding:10px;">SERVICE TYPE</th>
+                  <th style="padding:10px;">ODOMETER</th>
+                  <th style="padding:10px;">COST</th>
+                  <th style="padding:10px;">NOTES</th>
+                </tr>
+              </thead>
+              <tbody id="service-logbook-table-body">
+                <!-- Dynamically populated by garage.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: GROUP RIDE HUB -->
+      <section id="group-view" class="view-section">
+        <div style="display:grid; grid-template-columns: 1fr 340px; gap:20px;">
+          
+          <div class="glass-panel">
+            <div class="section-header">
+              <h2 class="section-title"><i class="fa-solid fa-users-line"></i> Group Ride Hub</h2>
+              <span class="pill" style="background:rgba(0,242,254,0.1); color:var(--primary);"><i class="fa-solid fa-wifi"></i> Access Code Enabled</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+              <div style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); padding:20px; border-radius:var(--radius-md); text-align:center;">
+                <h4 style="color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">HOST A NEW RIDE</h4>
+                <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:14px;">Generate an access code & QR code invite for your crew.</p>
+                <button id="btn-create-group" class="btn btn-primary" style="width:100%;">
+                  <i class="fa-solid fa-plus-circle"></i> Create Group
+                </button>
+              </div>
+
+              <div style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); padding:20px; border-radius:var(--radius-md); text-align:center;">
+                <h4 style="color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">JOIN RIDE GROUP</h4>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <input type="text" id="input-join-code" class="form-input" placeholder="Enter Code (e.g. PULSE9)" style="text-transform:uppercase; text-align:center; font-family:var(--font-mono); font-weight:700;">
+                  <button id="btn-join-group-submit" class="btn btn-secondary"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:14px;"><i class="fa-solid fa-user-group" style="color:var(--primary);"></i> Active Group Roster</h3>
+            <div id="group-roster-container">
+              <!-- Dynamically populated by group.js -->
+            </div>
+
+            <div style="margin-top:24px; text-align:right;">
+              <button id="btn-start-ride-launch" class="btn btn-primary" style="padding:14px 28px; font-size:1.1rem;">
+                <i class="fa-solid fa-play"></i> Start Ride & Launch GPS Tracking
+              </button>
+            </div>
+          </div>
+
+          <!-- Group QR Code Invite Panel -->
+          <div class="glass-panel" style="text-align:center;">
+            <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:12px;">Group QR Code Invite</h3>
+            <div id="qr-code-canvas" style="display:flex; justify-content:center; margin:16px 0;">
+              <!-- QR Code SVG -->
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Scan with RidePulse App camera</div>
+            <div style="background:rgba(0,242,254,0.1); border:1px solid rgba(0,242,254,0.3); border-radius:var(--radius-md); padding:10px;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">ACCESS CODE</span>
+              <span id="group-code-display" style="font-family:var(--font-mono); font-size:1.6rem; font-weight:800; color:var(--primary); letter-spacing:2px;">PULSE9</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- VIEW 3: LIVE TRACKING HUD & MAP -->
+      <section id="tracking-view" class="view-section">
+        <div class="tracking-container">
+          
+          <!-- Leaflet Map Container -->
+          <div class="map-card">
+            <div id="map"></div>
+
+            <div class="map-overlay-top" style="flex-wrap:wrap; gap:10px;">
+              <div class="pill active-signal" style="background:rgba(10,16,28,0.85); backdrop-filter:blur(10px);">
+                <i class="fa-solid fa-location-dot" style="color:var(--primary);"></i> GPS Active
+              </div>
+
+              <!-- Map Layer Switcher Pills -->
+              <div style="background:rgba(10,16,28,0.85); backdrop-filter:blur(10px); padding:4px 8px; border-radius:20px; border:1px solid var(--glass-border); display:flex; gap:6px;">
+                <button class="map-style-btn active" onclick="window.trackingEngine.switchMapLayer('google')">Google Maps</button>
+                <button class="map-style-btn" onclick="window.trackingEngine.switchMapLayer('googleHybrid')">Satellite</button>
+                <button class="map-style-btn" onclick="window.trackingEngine.switchMapLayer('dark')">Dark Mode</button>
+                <button class="map-style-btn" onclick="window.trackingEngine.locateUserGPS()" style="color:var(--primary); font-weight:700;"><i class="fa-solid fa-crosshairs"></i> My GPS</button>
+                <button id="btn-toggle-traffic" class="map-style-btn" onclick="window.trackingEngine.toggleTraffic()"><i class="fa-solid fa-car-side" style="color:var(--text-muted);"></i> Traffic: OFF</button>
+              </div>
+
+              <!-- Cellular / Off-Grid Mesh Signal Toggle -->
+              <div style="background:rgba(10,16,28,0.85); backdrop-filter:blur(10px); padding:6px 14px; border-radius:30px; border:1px solid var(--glass-border); display:flex; align-items:center; gap:10px;">
+                <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">Cell Signal:</span>
+                <label style="position:relative; display:inline-block; width:40px; height:22px; cursor:pointer;">
+                  <input type="checkbox" id="cellular-toggle" checked style="opacity:0; width:0; height:0;">
+                  <span style="position:absolute; inset:0; background:rgba(255,255,255,0.2); border-radius:20px; transition:0.3s;" id="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Turn-by-Turn Google Navigation Header Banner -->
+            <div id="nav-turn-banner" style="position:absolute; top:70px; left:16px; right:16px; z-index:15; background:rgba(10,25,47,0.95); backdrop-filter:blur(14px); border:1px solid rgba(0,242,254,0.4); border-radius:14px; padding:12px 16px; display:none; align-items:center; gap:14px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+              <div id="nav-turn-icon" style="width:44px; height:44px; border-radius:12px; background:var(--primary); color:#0b132b; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
+                <i class="fa-solid fa-diamond-turn-right"></i>
+              </div>
+              <div style="flex:1;">
+                <div id="nav-turn-instruction" style="font-weight:700; font-size:0.95rem; color:#fff; margin-bottom:2px;">Head North towards destination</div>
+                <div style="display:flex; gap:14px; font-size:0.8rem; color:var(--text-muted);">
+                  <span>ETA: <strong id="nav-turn-eta" style="color:var(--primary);">-- min</strong></span>
+                  <span>Dist: <strong id="nav-turn-dist" style="color:#fff;">-- km</strong></span>
+                  <span>Traffic: <strong id="nav-turn-traffic" style="color:var(--success);">Smooth</strong></span>
+                </div>
+              </div>
+              <button class="btn btn-secondary" style="font-size:0.75rem; padding:6px 10px; border-color:rgba(255,23,68,0.4); color:#ff5252;" onclick="window.trackingEngine.cancelNavigation()">&times; Stop Nav</button>
+            </div>
+
+            <!-- Bottom Location Search Bar & Destination Route Overlay -->
+            <div style="position:absolute; bottom:16px; left:16px; z-index:10; background:rgba(10,16,28,0.92); backdrop-filter:blur(12px); padding:8px 14px; border-radius:24px; border:1px solid var(--glass-border); display:flex; align-items:center; gap:8px; width:calc(100% - 32px); max-width:440px;">
+              <i class="fa-solid fa-magnifying-glass" style="color:var(--primary); font-size:0.9rem;"></i>
+              <input type="text" id="input-map-location-search" placeholder="Enter destination (e.g. Bandra, Airport, Brooklyn)..." style="background:transparent; border:none; color:#fff; font-size:0.85rem; width:100%; outline:none;">
+              <button id="btn-map-location-search" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; border-radius:16px;">Search</button>
+              <button id="btn-map-nav-route" class="btn btn-primary" style="padding:4px 12px; font-size:0.75rem; border-radius:16px; white-space:nowrap;"><i class="fa-solid fa-route"></i> Navigate</button>
+            </div>
+          </div>
+
+          <!-- Telemetry HUD Sidebar -->
+          <div class="telemetry-sidebar">
+            <div class="speedometer-card">
+              <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); letter-spacing:1px;">SPEEDOMETER</div>
+              <div class="speed-display">
+                <div id="hud-speed-val" class="speed-number">0</div>
+                <div class="speed-unit">KM / H</div>
+              </div>
+
+              <div class="stats-mini-grid">
+                <div class="stat-box">
+                  <div class="stat-label">DISTANCE</div>
+                  <div id="hud-distance-val" class="stat-value">0.0</div>
+                  <span style="font-size:0.7rem; color:var(--text-muted);">KM</span>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">DURATION</div>
+                  <div id="hud-timer-val" class="stat-value">00:00</div>
+                  <span style="font-size:0.7rem; color:var(--text-muted);">MM:SS</span>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">TOP SPEED</div>
+                  <div id="hud-topspeed-val" class="stat-value">0</div>
+                  <span style="font-size:0.7rem; color:var(--text-muted);">KM/H</span>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">ELEVATION</div>
+                  <div class="stat-value">185</div>
+                  <span style="font-size:0.7rem; color:var(--text-muted);">M</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Report Road Hazard Button -->
+            <button id="btn-open-report-hazard-modal" class="btn btn-warning" style="width:100%; font-size:0.95rem; font-weight:700; padding:12px;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Report Road Hazard
+            </button>
+
+            <!-- Community Hazard Feed Panel -->
+            <div class="glass-panel" style="padding:14px; margin-bottom:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-shield-halved" style="color:var(--warning);"></i> Nearby Road Hazards</span>
+                <span id="hazard-feed-badge-count" class="pill" style="background:rgba(255,145,0,0.15); color:var(--warning); font-size:0.7rem;">0 Active</span>
+              </div>
+              <div id="hazard-feed-container" style="max-height:160px; overflow-y:auto;">
+                <!-- Dynamically populated by hazards.js -->
+              </div>
+            </div>
+
+            <!-- Lean Angle Telemetry HUD Gauge -->
+            <div class="glass-panel" style="padding:14px; text-align:center;">
+              <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); letter-spacing:1px; margin-bottom:8px;">LEAN ANGLE & G-FORCE</div>
+              
+              <div style="display:flex; align-items:center; justify-content:center; gap:20px; margin:8px 0;">
+                <div style="width:50px; height:50px; border-radius:50%; border:2px dashed var(--primary); display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease;" id="hud-bike-tilt-graphic">
+                  <i class="fa-solid fa-motorcycle" style="font-size:1.4rem; color:var(--primary);"></i>
+                </div>
+                <div>
+                  <div id="hud-lean-angle-val" style="font-size:1.6rem; font-weight:800; color:var(--primary); font-family:var(--font-mono);">0°</div>
+                  <div id="hud-gforce-val" style="font-size:0.8rem; font-weight:700; color:var(--success);">1.00 G</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Weather & Road Grip Card -->
+            <div class="glass-panel" style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">ROUTE WEATHER</div>
+                <div style="font-size:0.9rem; font-weight:600; color:#fff;"><i class="fa-solid fa-sun" style="color:#ffb300;"></i> 24°C • Dry Asphalt</div>
+              </div>
+              <span class="pill" style="background:rgba(0,230,118,0.15); color:var(--success); font-size:0.75rem;">100% Grip</span>
+            </div>
+
+            <!-- Crash Sensor Test Simulation Button -->
+            <button id="btn-test-crash-sensor" class="btn btn-secondary" style="width:100%; border-color:rgba(255,23,68,0.4); color:#ff5252;">
+              <i class="fa-solid fa-shield-cat"></i> Test Crash Sensor Simulation
+            </button>
+
+            <!-- Intercom Voice Actions -->
+            <div class="glass-panel" style="padding:14px; margin-bottom:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:700; font-size:0.85rem;"><i class="fa-solid fa-headset" style="color:var(--primary);"></i> Voice Intercom</span>
+                <span style="font-size:0.75rem; color:var(--success);"><i class="fa-solid fa-signal"></i> Mesh Link</span>
+              </div>
+              <button id="btn-toggle-mute-mic" class="btn btn-secondary" style="width:100%; font-size:0.85rem;">
+                <i class="fa-solid fa-microphone"></i> Mute Mic
+              </button>
+            </div>
+
+            <!-- Emergency SOS Launch Button -->
+            <button id="btn-sos-trigger" class="btn btn-danger" style="width:100%; padding:14px; font-size:1.05rem; border-radius:var(--radius-lg);">
+              <i class="fa-solid fa-triangle-exclamation"></i> TRIGGER SOS EMERGENCY
+            </button>
+
+            <button id="btn-stop-ride" class="btn btn-secondary" style="width:100%;">
+              <i class="fa-solid fa-stop"></i> End Ride & Save Log
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- VIEW 4: OFF-GRID MESH NETWORK & INTERCOM OPERATIONS -->
+      <section id="mesh-view" class="view-section">
+        <div style="display:grid; grid-template-columns: 1fr 340px; gap:20px;">
+          
+          <div class="glass-panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title"><i class="fa-solid fa-diagram-project"></i> Off-Grid Mesh Topology Graph</h2>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">Live visualization of multi-hop P2P relays across group members' devices.</p>
+              </div>
+              <span class="pill mesh-active"><i class="fa-solid fa-tower-cell"></i> Dynamic Multi-Hop Routing</span>
+            </div>
+
+            <div class="mesh-graph-card">
+              <canvas id="meshCanvas"></canvas>
+            </div>
+
+            <div style="margin-top:20px;">
+              <h3 style="font-size:1rem; font-weight:700; margin-bottom:10px;"><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> Real-Time Packet Relay Activity Log</h3>
+              <div id="mesh-packet-logs" style="max-height:180px; overflow-y:auto; background:rgba(0,0,0,0.4); padding:12px; border-radius:var(--radius-md); border:1px solid var(--glass-border);">
+                <!-- Dynamically populated by mesh.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Hands-Free Voice Commands Panel -->
+          <div class="glass-panel">
+            <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:12px;"><i class="fa-solid fa-microphone-lines" style="color:var(--primary);"></i> Voice Intercom Controls</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Hands-free voice trigger operates automatically during rides.</p>
+
+            <div style="background:rgba(0,0,0,0.3); padding:14px; border-radius:var(--radius-md); border:1px solid var(--glass-border); margin-bottom:16px;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px;">SUPPORTED VOICE COMMANDS</span>
+              <div style="font-size:0.85rem; color:var(--primary); font-weight:600; line-height:1.6;">
+                • "SOS Emergency"<br>
+                • "Mute Intercom"<br>
+                • "Check Ride Status"
+              </div>
+            </div>
+
+            <button id="btn-simulate-voice-sos" class="btn btn-secondary" style="width:100%; margin-bottom:8px; font-size:0.85rem;">
+              <i class="fa-solid fa-bullhorn"></i> Simulate Voice Command: "SOS Emergency"
+            </button>
+            <button id="btn-simulate-voice-status" class="btn btn-secondary" style="width:100%; font-size:0.85rem;">
+              <i class="fa-solid fa-gauge-high"></i> Simulate Voice Command: "Check Status"
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- VIEW 5: RIDE LOGS & POST-RIDE ANALYTICS -->
+      <section id="logs-view" class="view-section">
+        <div class="glass-panel">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Ride History & Analytics</h2>
+            <span class="pill active-signal"><i class="fa-solid fa-arrows-rotate"></i> Auto-Synced with Garage</span>
+          </div>
+
+          <div id="ride-logs-list">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="nav-bar">
+      <button class="nav-item active" data-view="garage-view">
+        <i class="fa-solid fa-warehouse"></i>
+        <span>Garage</span>
+      </button>
+      <button class="nav-item" data-view="group-view">
+        <i class="fa-solid fa-users-line"></i>
+        <span>Group Hub</span>
+      </button>
+      <button class="nav-item" data-view="tracking-view">
+        <i class="fa-solid fa-location-arrow"></i>
+        <span>Live HUD</span>
+      </button>
+      <button class="nav-item" data-view="mesh-view">
+        <i class="fa-solid fa-diagram-project"></i>
+        <span>Mesh & VOX</span>
+      </button>
+      <button class="nav-item" data-view="logs-view">
+        <i class="fa-solid fa-route"></i>
+        <span>Ride Logs</span>
+      </button>
+      <button class="nav-item sos-btn-nav" onclick="window.sosEngine.triggerSOS('SOS Navigation Button')">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>SOS</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- FLOATING GUARDIAN CHECK-IN PROMPT OVERLAY -->
+  <div id="guardian-prompt-overlay" class="modal-backdrop">
+    <div class="modal-window" style="text-align:center; border-color:var(--primary); max-width:380px;">
+      <div style="width:64px; height:64px; border-radius:50%; background:rgba(0,242,254,0.15); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 12px; border:2px solid var(--primary); animation:pulse-sos 1.5s infinite;">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:4px;">GUARDIAN CHECK-IN</h2>
+      <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:16px;">Are you safe & riding smoothly?</p>
+      
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">AUTO-SOS DISPATCH IN</div>
+      <div id="guardian-countdown-val" style="font-family:var(--font-mono); font-size:2.5rem; font-weight:800; color:var(--warning); margin-bottom:20px;">02:00</div>
+
+      <button id="btn-acknowledge-guardian" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.2rem; font-weight:800;">
+        <i class="fa-solid fa-check-circle"></i> I'M OK! ✅
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: GUARDIAN CHECK-IN SETTINGS -->
+  <div id="guardian-settings-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-user-shield" style="color:var(--primary);"></i> Guardian Safety Check-In Settings</h3>
+        <button class="close-modal-btn" onclick="window.app.closeModal('guardian-settings-modal')">&times;</button>
+      </div>
+      <div class="form-group" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border:1px solid var(--glass-border);">
+        <div>
+          <span style="font-weight:600; font-size:0.9rem; display:block;">Enable Guardian System</span>
+          <span style="font-size:0.78rem; color:var(--text-muted);">Prompt for safety confirmation during rides</span>
+        </div>
+        <label style="position:relative; display:inline-block; width:44px; height:24px; cursor:pointer;">
+          <input type="checkbox" id="input-guardian-toggle" checked style="opacity:0; width:0; height:0;">
+          <span style="position:absolute; inset:0; background:rgba(255,255,255,0.2); border-radius:20px; transition:0.3s;" id="guardian-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Check-In Interval</label>
+        <select id="input-guardian-interval" class="form-select">
+          <option value="1">1 Minute (Quick Demo Test)</option>
+          <option value="15">15 Minutes</option>
+          <option value="30" selected>30 Minutes (Recommended)</option>
+          <option value="60">60 Minutes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Grace Period (Response Timeout)</label>
+        <select id="input-guardian-grace" class="form-select">
+          <option value="30">30 Seconds (Quick Demo Test)</option>
+          <option value="120" selected>2 Minutes (Recommended)</option>
+          <option value="300">5 Minutes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Emergency Contact Name</label>
+        <input type="text" id="input-guardian-contact-name" class="form-input" value="Sarah Mercer (Spouse)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Emergency Contact Phone</label>
+        <input type="text" id="input-guardian-contact-phone" class="form-input" value="+1 (555) 987-6543">
+      </div>
+      <button id="btn-save-guardian-settings" class="btn btn-primary" style="width:100%; margin-top:10px;">
+        Save Guardian Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: REPORT HAZARD -->
+  <div id="report-hazard-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color:var(--warning);"><i class="fa-solid fa-triangle-exclamation"></i> Report Road Hazard</h3>
+        <button class="close-modal-btn" onclick="window.app.closeModal('report-hazard-modal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Hazard Category</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;" id="hazard-category-picker">
+          <button class="btn btn-secondary hazard-cat-btn active" data-cat="POTHOLE" style="text-align:left; font-size:0.82rem; padding:10px;">
+            <i class="fa-solid fa-road-spikes" style="color:#ff9100; margin-right:6px;"></i> Pothole / Damage
+          </button>
+          <button class="btn btn-secondary hazard-cat-btn" data-cat="DEBRIS" style="text-align:left; font-size:0.82rem; padding:10px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#ffab00; margin-right:6px;"></i> Debris / Gravel
+          </button>
+          <button class="btn btn-secondary hazard-cat-btn" data-cat="ACCIDENT" style="text-align:left; font-size:0.82rem; padding:10px;">
+            <i class="fa-solid fa-car-burst" style="color:#ff1744; margin-right:6px;"></i> Traffic Accident
+          </button>
+          <button class="btn btn-secondary hazard-cat-btn" data-cat="SIGNAL_DOWN" style="text-align:left; font-size:0.82rem; padding:10px;">
+            <i class="fa-solid fa-wifi" style="color:#d500f9; margin-right:6px;"></i> Signal Down / Blind
+          </button>
+          <button class="btn btn-secondary hazard-cat-btn" data-cat="ANIMAL" style="text-align:left; font-size:0.82rem; padding:10px; grid-column:span 2;">
+            <i class="fa-solid fa-paw" style="color:#00e676; margin-right:6px;"></i> Wildlife / Animal on Road
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Details / Landmark (Optional)</label>
+        <input type="text" id="input-hazard-note" class="form-input" placeholder="e.g. Deep hole near hairpin turn apex">
+      </div>
+      <button id="btn-submit-hazard-report" class="btn btn-warning" style="width:100%; margin-top:10px; font-weight:700;">
+        <i class="fa-solid fa-bullhorn"></i> Broadcast Hazard to Crew
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD NEW BIKE -->
+  <div id="add-bike-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-motorcycle" style="color:var(--primary);"></i> Add Bike to Digital Garage</h3>
+        <button class="close-modal-btn" onclick="window.app.closeModal('add-bike-modal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Make / Manufacturer</label>
+        <input type="text" id="input-bike-make" class="form-input" placeholder="e.g. Ducati, Yamaha, BMW, Honda">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Model Name</label>
+        <input type="text" id="input-bike-model" class="form-input" placeholder="e.g. Panigale V4 S, Tenere 700">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Model Year</label>
+        <input type="number" id="input-bike-year" class="form-input" value="2023">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Current Odometer Mileage (km)</label>
+        <input type="number" id="input-bike-mileage" class="form-input" placeholder="e.g. 4500">
+      </div>
+      <div style="text-align:right; margin-top:20px;">
+        <button id="btn-save-new-bike" class="btn btn-primary" style="width:100%;">
+          Save Bike to Garage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD SERVICE EXPENSE -->
+  <div id="add-service-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-wrench" style="color:var(--primary);"></i> Add Maintenance Expense Entry</h3>
+        <button class="close-modal-btn" onclick="window.app.closeModal('add-service-modal')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service / Part Description</label>
+        <input type="text" id="input-service-type" class="form-input" placeholder="e.g. Synthetic Oil Change & Filter, Brake Pads">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cost ($ USD)</label>
+        <input type="number" id="input-service-cost" class="form-input" placeholder="e.g. 150">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odometer Mileage (km)</label>
+        <input type="number" id="input-service-mileage" class="form-input" placeholder="e.g. 4800">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes / Part Specs</label>
+        <input type="text" id="input-service-notes" class="form-input" placeholder="e.g. Brand, viscosity, shop receipt #">
+      </div>
+      <div style="text-align:right; margin-top:20px;">
+        <button id="btn-save-service-expense" class="btn btn-primary" style="width:100%;">
+          Save Expense Entry
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRE-RIDE MAINTENANCE OVERDUE WARNING -->
+  <div id="pre-ride-warning-modal" class="modal-backdrop">
+    <div class="modal-window" style="border-color: rgba(255,23,68,0.4);">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color:var(--danger);"><i class="fa-solid fa-circle-exclamation"></i> Overdue Maintenance Alert</h3>
+        <button class="close-modal-btn" onclick="window.app.closeModal('pre-ride-warning-modal')">&times;</button>
+      </div>
+      <p style="font-size:0.95rem; line-height:1.5; color:var(--text-muted); margin-bottom:16px;">
+        Your active bike has overdue maintenance service items recorded in the Digital Garage (e.g. oil or brake check). Riding with overdue service may compromise safety.
+      </p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="window.app.closeModal('pre-ride-warning-modal'); window.app.switchView('garage-view');">
+          <i class="fa-solid fa-wrench"></i> Review Garage
+        </button>
+        <button class="btn btn-warning" style="flex:1;" onclick="window.app.closeModal('pre-ride-warning-modal'); window.app.switchView('group-view');">
+          Proceed to Ride Hub Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: POST-RIDE SUMMARY & GARAGE MILEAGE SYNC -->
+  <div id="post-ride-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div id="post-ride-summary-body">
+        <!-- Dynamically populated by app.js -->
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button id="btn-modal-gpx-export" class="btn btn-secondary" style="flex:1;">
+          <i class="fa-solid fa-download"></i> Export GPX Track
+        </button>
+        <button class="btn btn-primary" style="flex:1;" onclick="window.app.closeModal('post-ride-modal'); window.app.switchView('logs-view');">
+          View Ride Logs
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: EMERGENCY SOS STROBE & DISPATCH -->
+  <div id="sos-overlay" class="sos-overlay">
+    <div class="sos-card">
+      <div class="sos-icon-large">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h1 class="sos-title">SOS EMERGENCY ALERT</h1>
+      <p style="color:var(--text-muted);">DISPATCHING EMERGENCY LOCATION TO GROUP & CONTACTS</p>
+      
+      <div id="sos-countdown-val" class="sos-countdown">5</div>
+      
+      <div id="sos-dispatch-status" class="sos-status-box">
+        Dispatching via <strong>Cellular API</strong> & <strong>Mesh Hop Relay</strong>...
+      </div>
+
+      <button id="btn-cancel-sos" class="btn btn-secondary" style="padding:14px 28px; font-size:1.1rem; border-color:rgba(255,255,255,0.3);">
+        <i class="fa-solid fa-xmark"></i> CANCEL SOS ALERT
+      </button>
+    </div>
+  </div>
+
+  <!-- External JavaScript Libraries -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Application Modules -->
+  <script src="js/sound.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/garage.js"></script>
+  <script src="js/group.js"></script>
+  <script src="js/mesh.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/sos.js"></script>
+  <script src="js/guardian.js"></script>
+  <script src="js/hazards.js"></script>
+  <script src="js/tracking.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

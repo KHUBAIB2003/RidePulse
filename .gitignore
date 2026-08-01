@@ -1,0 +1,46 @@
+# Node.js & Backend
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.production
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+
+# Flutter & Dart
+.dart_tool/
+.fvm/
+.idea/
+.vscode/
+.packages
+.pub-cache/
+.pub/
+build/
+ios/Pods/
+ios/Runner.xcworkspace
+ios/Runner.xcodeproj/project.xcworkspace
+android/.gradle/
+android/captures/
+android/app/debug/
+android/app/profile/
+android/app/release/
+*.apk
+*.aab
+*.ipa
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+.idea/
+.vscode/
+
+# Media Scratch & Reports
+*.docx
+*.pyc
+scratch/
