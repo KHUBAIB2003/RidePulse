@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { logger } from '../utils/logger.util.js';
 import { RequestWithId } from './requestId.middleware.js';
 

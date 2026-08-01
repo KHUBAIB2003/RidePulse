@@ -76,7 +76,7 @@ export const checkDatabaseHealth = async (): Promise<DatabaseHealthStatus> => {
       name: mongoose.connection.name,
       pingMs
     };
-  } catch (err) {
+  } catch (_err) {
     return {
       status: 'DEGRADED',
       readyState: state,

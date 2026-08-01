@@ -10,7 +10,7 @@ import {
   CreateExpenseInput, 
   CreateFuelLogInput 
 } from '../validators/bike.validator.js';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../errors/httpExceptions.js';
+import { NotFoundError, ForbiddenError } from '../errors/httpExceptions.js';
 
 export class GarageService {
   static async createBike(userId: string, input: CreateBikeInput): Promise<IBike> {
@@ -73,7 +73,6 @@ export class GarageService {
     bike.deletedAt = new Date();
     await bike.save();
 
-    // If default bike deleted, pick another bike as default
     if (bike.isDefault) {
       const nextBike = await Bike.findOne({ userId: bike.userId, isSoftDeleted: false }).sort({ createdAt: -1 });
       if (nextBike) {
@@ -137,7 +136,6 @@ export class GarageService {
 
     await log.save();
 
-    // Also record maintenance expense
     await Expense.create({
       bikeId: bike._id,
       userId,
@@ -147,14 +145,12 @@ export class GarageService {
       notes: `Service: ${input.title}`
     });
 
-    // Update bike odometer if service odometer is higher
     if (input.odometerAtServiceKm > bike.odometerKm) {
       bike.odometerKm = input.odometerAtServiceKm;
       bike.currentMileageKm = input.odometerAtServiceKm;
       await bike.save();
     }
 
-    // Auto create reminder for next service due
     if (input.nextServiceDueKm || input.nextServiceDueDate) {
       await Reminder.create({
         bikeId: bike._id,
@@ -196,7 +192,6 @@ export class GarageService {
   static async addFuelLog(bikeId: string, userId: string, input: CreateFuelLogInput): Promise<IFuelLog> {
     const bike = await this.getBikeById(bikeId, userId);
 
-    // Find previous fuel log to calculate distance since last fill
     const previousLog = await FuelLog.findOne({ bikeId }).sort({ odometerKm: -1 });
 
     let distanceSinceLastFillKm = 0;
@@ -223,7 +218,6 @@ export class GarageService {
 
     await fuelLog.save();
 
-    // Record fuel expense automatically
     await Expense.create({
       bikeId: bike._id,
       userId,
@@ -233,7 +227,6 @@ export class GarageService {
       notes: `Fuel: ${input.fuelLiters}L @ ${input.fuelStationName || 'Station'}`
     });
 
-    // Update bike average mileage and odometer
     if (calculatedKmpl > 0) {
       bike.averageMileageKmpl = parseFloat(((bike.averageMileageKmpl + calculatedKmpl) / 2).toFixed(2));
     }

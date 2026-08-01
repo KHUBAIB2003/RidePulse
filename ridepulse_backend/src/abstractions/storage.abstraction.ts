@@ -27,7 +27,7 @@ export class MockStorageProvider implements StorageProvider {
     return true;
   }
 
-  async getPresignedUploadUrl(filename: string, mimeType: string): Promise<{ uploadUrl: string; fileKey: string }> {
+  async getPresignedUploadUrl(filename: string, _mimeType: string): Promise<{ uploadUrl: string; fileKey: string }> {
     const fileKey = `uploads/${Date.now()}_${filename}`;
     return {
       uploadUrl: `https://storage.ridepulse.local/presigned/${fileKey}?token=mock_upload_token`,

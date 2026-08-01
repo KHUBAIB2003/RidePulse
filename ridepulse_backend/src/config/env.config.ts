@@ -6,19 +6,15 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z.string().default('5000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017/ridepulse_dev'),
-  JWT_ACCESS_SECRET: z.string().default('dev_access_secret_key_32chars_min'),
-  JWT_REFRESH_SECRET: z.string().default('dev_refresh_secret_key_32chars_min'),
+  LOG_LEVEL: z.string().default('info'),
+  MONGODB_URI: z.string().default('mongodb://localhost:27017/ridepulse'),
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   CLIENT_ORIGIN: z.string().default('*')
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+export type EnvConfig = z.infer<typeof envSchema>;
 
-if (!parsedEnv.success) {
-  console.error('❌ Environment Variable Validation Error:', parsedEnv.error.format());
-  process.exit(1);
-}
-
-export const env = parsedEnv.data;
+export const env: EnvConfig = envSchema.parse(process.env);

@@ -62,7 +62,7 @@ export class AuthService {
     }
 
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-    const emailVerificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const emailVerificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = new User({
       firstName: input.firstName,
@@ -87,14 +87,12 @@ export class AuthService {
 
     await user.save();
 
-    // Add initial password to history
     user.passwordHistory.push(user.passwordHash);
     await user.save();
 
     const tokens = this.generateTokens(user._id.toString(), user.role);
     await this.storeRefreshToken(user._id.toString(), tokens.refreshToken, ipAddress, userAgent);
 
-    // Audit Log
     await ActivityLog.create({
       userId: user._id,
       action: 'USER_REGISTERED',
@@ -113,7 +111,6 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    // Account Lock Protection Check
     if (user.isLocked()) {
       const remainingMinutes = Math.ceil((user.lockUntil!.getTime() - Date.now()) / 60000);
       throw new ForbiddenError(`Account is temporarily locked due to repeated failed logins. Try again in ${remainingMinutes} minute(s).`);
@@ -123,7 +120,7 @@ export class AuthService {
     if (!isMatch) {
       user.failedLoginAttempts += 1;
       if (user.failedLoginAttempts >= 5) {
-        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
         user.accountStatus = 'LOCKED';
       }
       await user.save();
@@ -139,7 +136,6 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    // Reset lock counters on successful authentication
     user.failedLoginAttempts = 0;
     user.lockUntil = undefined;
     user.accountStatus = 'ACTIVE';
@@ -150,7 +146,6 @@ export class AuthService {
     const tokens = this.generateTokens(user._id.toString(), user.role);
     await this.storeRefreshToken(user._id.toString(), tokens.refreshToken, ipAddress, userAgent, input.deviceId);
 
-    // Update Session
     const sessionId = crypto.randomUUID();
     await Session.create({
       userId: user._id,
@@ -178,7 +173,6 @@ export class AuthService {
 
       const existingToken = await RefreshToken.findOne({ tokenHash });
 
-      // Reuse Detection Security Guard: If a revoked token is presented, revoke all user tokens immediately!
       if (!existingToken || existingToken.isRevoked) {
         if (existingToken) {
           await RefreshToken.updateMany({ userId: existingToken.userId }, { isRevoked: true });
@@ -192,13 +186,11 @@ export class AuthService {
         throw new UnauthorizedError('Invalid or revoked refresh token');
       }
 
-      // Mark old token as revoked/replaced
       existingToken.isRevoked = true;
       const newTokens = this.generateTokens(decoded.userId, decoded.role);
       existingToken.replacedByTokenHash = this.hashToken(newTokens.refreshToken);
       await existingToken.save();
 
-      // Store new refresh token
       await this.storeRefreshToken(decoded.userId, newTokens.refreshToken, ipAddress, userAgent);
 
       await ActivityLog.create({
@@ -209,7 +201,7 @@ export class AuthService {
       });
 
       return newTokens;
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
   }
@@ -249,7 +241,6 @@ export class AuthService {
       throw new BadRequestError('Current password does not match');
     }
 
-    // Password History reuse check (prevent reusing last 3 passwords)
     for (const oldHash of user.passwordHistory.slice(-3)) {
       const isReused = await import('bcrypt').then(b => b.compare(input.newPassword, oldHash));
       if (isReused) {
@@ -274,11 +265,11 @@ export class AuthService {
 
   static async forgotPassword(input: ForgotPasswordInput): Promise<boolean> {
     const user = await User.findOne({ email: input.email.toLowerCase(), isSoftDeleted: false });
-    if (!user) return true; // Silent return for privacy
+    if (!user) return true;
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.passwordResetTokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    user.passwordResetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
     await user.save();
 
     await ActivityLog.create({
@@ -313,7 +304,6 @@ export class AuthService {
     user.passwordHistory.push(user.passwordHash);
     await user.save();
 
-    // Revoke tokens on password reset
     await RefreshToken.updateMany({ userId: user._id }, { isRevoked: true });
 
     await ActivityLog.create({
@@ -355,7 +345,7 @@ export class AuthService {
     deviceId = 'default'
   ): Promise<void> {
     const tokenHash = this.hashToken(tokenString);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await RefreshToken.create({
       userId,

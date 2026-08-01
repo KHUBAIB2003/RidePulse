@@ -33,7 +33,7 @@ export const authenticateJwt = (req: AuthenticatedRequest, res: Response, next: 
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { userId: string; role: string };
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch (_err) {
     res.status(401).json({
       success: false,
       data: null,

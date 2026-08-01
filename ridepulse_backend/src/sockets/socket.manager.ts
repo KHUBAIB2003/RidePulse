@@ -56,7 +56,7 @@ export class SocketManager {
         const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { userId: string; role: string };
         socket.user = decoded;
         next();
-      } catch (err) {
+      } catch (_err) {
         logger.warn(`[SocketAuth] Connection rejected for socket ${socket.id}: Invalid token`);
         next(new Error('Invalid or expired authentication token'));
       }
@@ -66,12 +66,10 @@ export class SocketManager {
   private setupNamespaces(): void {
     if (!this.io) return;
 
-    // Main Namespace Connection Lifecycle
     this.io.on('connection', (socket: AuthenticatedSocket) => {
       const userId = socket.user?.userId || 'unknown';
       logger.info(`⚡ Socket Connected: ID=${socket.id}, User=${userId}`);
 
-      // Auto join user private room
       socket.join(`room:user:${userId}`);
 
       socket.on('disconnect', (reason) => {
@@ -83,19 +81,16 @@ export class SocketManager {
       });
     });
 
-    // Dedicated Telemetry Namespace (/telemetry)
     const telemetryNs = this.io.of('/telemetry');
     telemetryNs.on('connection', (socket: AuthenticatedSocket) => {
       logger.info(`📡 Telemetry Socket Connected: ID=${socket.id}`);
     });
 
-    // Dedicated SOS Namespace (/sos)
     const sosNs = this.io.of('/sos');
     sosNs.on('connection', (socket: AuthenticatedSocket) => {
       logger.info(`🚨 SOS Socket Connected: ID=${socket.id}`);
     });
 
-    // Dedicated Groups Namespace (/groups)
     const groupsNs = this.io.of('/groups');
     groupsNs.on('connection', (socket: AuthenticatedSocket) => {
       logger.info(`👥 Groups Socket Connected: ID=${socket.id}`);
