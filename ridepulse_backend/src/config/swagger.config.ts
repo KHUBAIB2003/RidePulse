@@ -6,16 +6,16 @@ const swaggerSpec = {
   info: {
     title: 'RidePulse v2.0 REST API Specification',
     version: '2.0.0',
-    description: 'Enterprise API Documentation for RidePulse Motorcycle Telemetry, Digital Garage, Hazard Reporting, Guardian & SOS Engine.',
+    description: 'Enterprise Identity & Telemetry API Engine for RidePulse Motorcycle Companion Platform.',
     contact: {
-      name: 'RidePulse Architecture Team',
+      name: 'RidePulse Engineering Team',
       email: 'support@ridepulse.local'
     }
   },
   servers: [
     {
       url: '/api/v1',
-      description: 'Production API v1 Router'
+      description: 'Production API v1 Engine'
     }
   ],
   components: {
@@ -36,29 +36,101 @@ const swaggerSpec = {
   paths: {
     '/health': {
       get: {
-        summary: 'Server System Health Check',
-        description: 'Returns current database ping latency, operational environment, and health status.',
-        responses: {
-          200: {
-            description: 'Server is healthy'
-          }
-        }
+        summary: 'System Health Check Telemetry',
+        responses: { 200: { description: 'Server operational' } }
       }
     },
     '/auth/register': {
       post: {
-        summary: 'Register New Rider Account',
-        responses: {
-          201: { description: 'Account registered successfully' }
-        }
+        summary: 'User Registration',
+        description: 'Registers a new rider account with default preferences and verification token.',
+        responses: { 201: { description: 'Account registered' } }
       }
     },
     '/auth/login': {
       post: {
-        summary: 'Authenticate Rider Credentials',
-        responses: {
-          200: { description: 'Authenticated successfully with JWT' }
-        }
+        summary: 'User Login & Authentication',
+        description: 'Authenticates rider credentials with failed login protection (locks after 5 failures).',
+        responses: { 200: { description: 'Authenticated successfully' } }
+      }
+    },
+    '/auth/refresh': {
+      post: {
+        summary: 'Rotate Refresh & Access Tokens',
+        description: 'Exchanges refresh token for new access token with automatic reuse detection.',
+        responses: { 200: { description: 'Tokens rotated' } }
+      }
+    },
+    '/auth/logout': {
+      post: {
+        summary: 'User Logout',
+        responses: { 200: { description: 'Logged out successfully' } }
+      }
+    },
+    '/auth/change-password': {
+      post: {
+        summary: 'Change Current Password',
+        responses: { 200: { description: 'Password changed successfully' } }
+      }
+    },
+    '/auth/forgot-password': {
+      post: {
+        summary: 'Forgot Password Request',
+        responses: { 200: { description: 'Reset link dispatched' } }
+      }
+    },
+    '/auth/reset-password': {
+      post: {
+        summary: 'Reset Password',
+        responses: { 200: { description: 'Password reset' } }
+      }
+    },
+    '/auth/verify-email': {
+      post: {
+        summary: 'Verify Email Address',
+        responses: { 200: { description: 'Email verified' } }
+      }
+    },
+    '/profile': {
+      get: {
+        summary: 'Get Authenticated User Profile',
+        responses: { 200: { description: 'Profile payload' } }
+      },
+      put: {
+        summary: 'Update User Profile',
+        responses: { 200: { description: 'Profile updated' } }
+      },
+      delete: {
+        summary: 'Soft-Delete Account',
+        responses: { 200: { description: 'Account soft-deleted' } }
+      }
+    },
+    '/profile/preferences': {
+      put: {
+        summary: 'Update Preferences & Settings',
+        responses: { 200: { description: 'Preferences updated' } }
+      }
+    },
+    '/profile/sessions': {
+      get: {
+        summary: 'Get Active User Sessions',
+        responses: { 200: { description: 'Active sessions list' } }
+      },
+      delete: {
+        summary: 'Terminate Other Sessions',
+        responses: { 200: { description: 'Sessions terminated' } }
+      }
+    },
+    '/profile/activity': {
+      get: {
+        summary: 'Get Activity Audit History Logs',
+        responses: { 200: { description: 'Audit history list' } }
+      }
+    },
+    '/profile/emergency-contacts': {
+      post: {
+        summary: 'Add Emergency Contact',
+        responses: { 201: { description: 'Contact added' } }
       }
     }
   }

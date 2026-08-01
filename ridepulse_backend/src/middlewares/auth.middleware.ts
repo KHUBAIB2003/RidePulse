@@ -7,6 +7,12 @@ export interface AuthenticatedRequest extends Request {
     userId: string;
     role: string;
   };
+  file?: {
+    buffer: Buffer;
+    originalname: string;
+    mimetype: string;
+    size?: number;
+  };
 }
 
 export const authenticateJwt = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
