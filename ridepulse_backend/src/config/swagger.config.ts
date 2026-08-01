@@ -6,7 +6,7 @@ const swaggerSpec = {
   info: {
     title: 'RidePulse v2.0 REST API Specification',
     version: '2.0.0',
-    description: 'Enterprise Telemetry, Ride Tracking, SOS, Digital Garage & Identity API Engine for RidePulse Platform.',
+    description: 'Enterprise Telemetry, Ride Tracking, SOS Emergency Engine, Digital Garage & Identity API Engine for RidePulse Platform.',
     contact: {
       name: 'RidePulse Engineering Team',
       email: 'support@ridepulse.local'
@@ -162,6 +162,82 @@ const swaggerSpec = {
       get: {
         summary: 'Export Track to CSV Telemetry Data',
         responses: { 200: { description: 'CSV file' } }
+      }
+    },
+    '/sos/start': {
+      post: {
+        summary: 'Start One-Tap SOS Countdown',
+        responses: { 201: { description: 'SOS countdown initiated' } }
+      }
+    },
+    '/sos/cancel': {
+      post: {
+        summary: 'Cancel SOS Countdown',
+        responses: { 200: { description: 'SOS countdown cancelled' } }
+      }
+    },
+    '/sos/trigger': {
+      post: {
+        summary: 'Trigger Emergency SOS Broadcast',
+        responses: { 200: { description: 'SOS emergency triggered' } }
+      }
+    },
+    '/sos/location': {
+      post: {
+        summary: 'Stream Live Emergency GPS Location',
+        responses: { 200: { description: 'Live location updated' } }
+      }
+    },
+    '/sos/resolve': {
+      post: {
+        summary: 'Mark SOS Emergency Resolved',
+        responses: { 200: { description: 'SOS emergency resolved' } }
+      }
+    },
+    '/sos/current': {
+      get: {
+        summary: 'Get Current Active SOS Incident',
+        responses: { 200: { description: 'Active SOS data' } }
+      }
+    },
+    '/sos/history': {
+      get: {
+        summary: 'Get Rider SOS History',
+        responses: { 200: { description: 'SOS history list' } }
+      }
+    },
+    '/sos/{id}': {
+      get: {
+        summary: 'Get SOS Incident Details',
+        responses: { 200: { description: 'SOS details' } }
+      },
+      delete: {
+        summary: 'Delete SOS Record',
+        responses: { 200: { description: 'SOS deleted' } }
+      }
+    },
+    '/sos/{id}/timeline': {
+      get: {
+        summary: 'Get SOS Emergency Timeline',
+        responses: { 200: { description: 'Timeline events' } }
+      }
+    },
+    '/admin/sos': {
+      get: {
+        summary: 'Admin: Get All Emergency Incidents',
+        responses: { 200: { description: 'Incidents list' } }
+      }
+    },
+    '/admin/sos/{id}/close': {
+      patch: {
+        summary: 'Admin: Force Close SOS Incident',
+        responses: { 200: { description: 'Incident closed' } }
+      }
+    },
+    '/admin/sos/{id}/escalate': {
+      patch: {
+        summary: 'Admin: Escalate Incident Severity',
+        responses: { 200: { description: 'Incident escalated' } }
       }
     }
   }
