@@ -6,6 +6,7 @@ import { rideRoutes } from '../ride.routes.js';
 import { sosRoutes } from '../sos.routes.js';
 import { adminSosRoutes } from '../admin.sos.routes.js';
 import { guardianRoutes } from '../guardian.routes.js';
+import { emergencyContactRoutes } from '../emergency-contact.routes.js';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/rides', rideRoutes);
 router.use('/sos', sosRoutes);
 router.use('/admin/sos', adminSosRoutes);
 router.use('/guardian', guardianRoutes);
+router.use('/emergency-contacts', emergencyContactRoutes);
 
 export default router;
